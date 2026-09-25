@@ -1,0 +1,82 @@
+# The `version:` key is obsolete in Compose v2 and only prints a warning.
+#
+# App only:   docker compose up -d --build app
+# Everything: docker compose up -d --build
+
+services:
+  app:
+    build:
+      context: .
+      args:
+        APP_VERSION: ${APP_VERSION:-0.0.0}
+    image: encrypted-chat:${APP_VERSION:-local}
+    container_name: encrypted-chat
+    ports:
+      - "5000:5000"
+    environment:
+      APP_VERSION: ${APP_VERSION:-0.0.0}
+      # Four slashes: sqlite:/// plus the absolute path /app/data/chat.db
+      DATABASE_URL: sqlite:////app/data/chat.db
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-staging-only-replace-me}
+      FLASK_SECRET_KEY: ${FLASK_SECRET_KEY:-staging-only-replace-me}
+      # The SPA is served from this container, so the browser's Origin on the
+      # Socket.IO handshake is the container's own address rather than a Vite
+      # dev port. "*" accepts it whatever host the demo runs on. Narrow this
+      # to the real hostname for anything beyond a marking demo.
+      FRONTEND_ORIGIN: "*"
+      SOCKETIO_ASYNC_MODE: eventlet
+    volumes:
+      - chat-data:/app/data
+    restart: unless-stopped
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:5000/health', timeout=4).status == 200 else 1)
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    networks:
+      - chat-net
+
+  prometheus:
+    image: prom/prometheus:v2.53.0
+    container_name: chat-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./monitoring/alerts.yml:/etc/prometheus/alerts.yml:ro
+      - prom-data:/prometheus
+    depends_on:
+      app:
+        condition: service_healthy
+    networks:
+      - chat-net
+
+  grafana:
+    image: grafana/grafana:11.1.0
+    container_name: chat-grafana
+    ports:
+      # 3000 inside the container, published on 3001 to stay clear of Vite.
+      - "3001:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    volumes:
+      - grafana-data:/var/lib/grafana
+    depends_on:
+      - prometheus
+    networks:
+      - chat-net
+
+networks:
+  chat-net:
+    driver: bridge
+
+volumes:
+  chat-data:
+  prom-data:
+  grafana-data:

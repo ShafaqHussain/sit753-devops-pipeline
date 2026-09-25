@@ -1,0 +1,7 @@
+# Test and analysis tooling. Kept out of requirements.txt so none of it ships
+# in the production image, which keeps the Trivy scan surface small.
+-r requirements.txt
+
+pytest==8.3.3
+pytest-cov==5.0.0
+bandit==1.7.9

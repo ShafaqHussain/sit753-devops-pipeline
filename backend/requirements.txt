@@ -1,0 +1,16 @@
+Flask==3.0.3
+Flask-SQLAlchemy==3.1.1
+Flask-SocketIO==5.3.6
+Flask-Cors==4.0.1
+python-dotenv==1.0.1
+PyJWT==2.9.0
+Werkzeug==3.0.4
+python-socketio==5.11.4
+
+# Production serving. Socket.IO needs an async worker for WebSocket upgrades,
+# and exactly one worker process unless a Redis message queue is added.
+gunicorn==22.0.0
+eventlet==0.36.1
+
+# Monitoring stage: exposes /metrics in the Prometheus text format.
+prometheus-flask-exporter==0.23.1

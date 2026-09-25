@@ -1,0 +1,41 @@
+# Secrets. Never commit these. .env.example is the committed template.
+backend/.env
+frontend/.env
+.env
+
+# Python bytecode. Uses **/ so nested dirs such as backend/tests/__pycache__
+# are matched too; a path-anchored pattern would miss them.
+**/__pycache__/
+**/*.py[cod]
+
+# Virtual environments
+backend/venv/
+backend/.venv/
+
+# Databases and Flask instance data
+backend/instance/
+**/*.db
+**/*.sqlite3
+
+# Build output
+frontend/node_modules/
+frontend/dist/
+backend/static/
+
+# Test and pipeline artifacts
+**/.pytest_cache/
+**/.coverage
+**/coverage.xml
+**/htmlcov/
+**/reports/
+**/bandit-report.json
+**/trivy-report.json
+**/snyk-report.json
+.scannerwork/
+
+# Local editor and tooling config
+.claude/
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

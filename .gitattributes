@@ -1,0 +1,17 @@
+# Normalise every text file to LF inside the repository and in the working
+# tree. Without this, Git converts files to CRLF on a Windows checkout, and a
+# shell script carrying CRLF fails inside a Linux container with the
+# unhelpful error "bad interpreter: /bin/bash^M". The pipeline runs its build,
+# test and deploy steps on Linux, so LF everywhere is the safe default.
+* text=auto eol=lf
+
+# Files that must never be line-ending converted.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.zip binary
+*.woff binary
+*.woff2 binary
