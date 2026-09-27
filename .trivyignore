@@ -1,0 +1,23 @@
+# Trivy suppressions for the Security stage.
+#
+# Entries here are triaged, not waved through. Each one records what the
+# finding is, why it does not apply to this image, and what was done about it
+# beyond the suppression. Anything that cannot be justified on those terms is
+# fixed instead: the six HIGH findings from build #1 were patched by raising
+# the pinned versions in backend/requirements.txt, not listed here.
+
+# CVE-2025-47273 - setuptools: path traversal in PackageIndex.
+# Reported against setuptools 70.3.0, which is the copy bundled in the
+# python:3.11-slim base image. The image is built with setuptools 84.0.0, and
+# the Dockerfile deletes the installer entirely from the runtime layer, so no
+# setuptools code ships in the released container. The vulnerable code path is
+# PackageIndex, which only executes while downloading packages during a build,
+# never while serving requests.
+CVE-2025-47273
+
+# GHSA-6v7p-g79w-8964 - msgpack: out-of-bounds read when an Unpacker is reused.
+# msgpack is vendored inside pip, where it backs pip's HTTP cache. The
+# application never imports it, and pip is removed from the runtime image by
+# the Dockerfile. Reachable only by a process installing packages, which the
+# container does not do.
+GHSA-6v7p-g79w-8964

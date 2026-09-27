@@ -160,9 +160,12 @@ pipeline {
                     mkdir -p reports
 
                     echo "--- Trivy: image vulnerability scan ---"
-                    trivy image --scanners vuln --format json \
+                    # /dev/null as the ignore file keeps these reports complete:
+                    # they record everything found, including the entries the
+                    # gate below suppresses with a justification.
+                    trivy image --scanners vuln --ignorefile /dev/null --format json \
                         -o reports/trivy-report.json ${IMAGE} || true
-                    trivy image --scanners vuln --format table ${IMAGE} \
+                    trivy image --scanners vuln --ignorefile /dev/null --format table ${IMAGE} \
                         | tee reports/trivy-report.txt || true
 
                     echo "--- Bandit: Python static analysis ---"
@@ -183,10 +186,16 @@ pipeline {
                 '''
                 // The gate is a separate step so the reports above always exist
                 // before a failure can stop the stage.
+                //
+                // --ignorefile applies .trivyignore, which carries a written
+                // justification per suppressed finding. The reporting scan
+                // above deliberately does not use it, so the archived reports
+                // show every finding and the gate acts on the triaged set.
                 sh '''
                     set -e
                     echo "--- Enforcing gate: no HIGH or CRITICAL CVEs ---"
                     trivy image --scanners vuln \
+                        --ignorefile .trivyignore \
                         --severity HIGH,CRITICAL \
                         --ignore-unfixed \
                         --exit-code 1 \

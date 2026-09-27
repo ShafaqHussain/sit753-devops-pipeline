@@ -40,8 +40,22 @@ COPY backend/requirements.txt ./
 # escalation via a malicious wheel file) and CVE-2026-23949 in jaraco.context
 # (path traversal via a malicious tar archive), which arrives as a dependency
 # of setuptools. Both ship inside the python:3.11-slim base image.
+#
+# The installer is then removed. Build #2 showed why: Trivy still reported
+# setuptools 70.3.0 and msgpack 1.1.2 even though the image carries setuptools
+# 84.0.0 and pip 26.2.1, because those versions come from the tooling bundled
+# in the base image rather than from anything the application imports. A
+# container that only runs gunicorn has no reason to keep a package installer,
+# so deleting it removes the finding and the attack surface together, instead
+# of suppressing a warning about code that would still be sitting in the image.
 RUN pip install --no-cache-dir --upgrade pip setuptools wheel \
- && pip install --no-cache-dir -r requirements.txt
+ && pip install --no-cache-dir -r requirements.txt \
+ && rm -rf /usr/local/lib/python3.11/site-packages/pip* \
+           /usr/local/lib/python3.11/site-packages/setuptools* \
+           /usr/local/lib/python3.11/site-packages/wheel* \
+           /usr/local/lib/python3.11/site-packages/pkg_resources \
+           /usr/local/lib/python3.11/ensurepip \
+           /usr/local/bin/pip*
 
 COPY backend/ ./
 
