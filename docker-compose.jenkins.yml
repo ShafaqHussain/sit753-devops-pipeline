@@ -18,9 +18,14 @@ services:
       - "8080:8080"    # web UI
       - "50000:50000"  # inbound agents, unused here but conventional
     environment:
+      # The container would otherwise run in UTC, so every build timestamp in
+      # the UI and in report screenshots would read hours off local time.
+      TZ: Asia/Kolkata
       # Skips the "customise Jenkins" plugin wizard, since the image already
       # bakes in every plugin the pipeline needs.
-      JAVA_OPTS: "-Djenkins.install.runSetupWizard=true -Dhudson.model.DirectoryBrowserSupport.CSP="
+      # TZ alone is not enough: the JVM caches its own default zone, so
+      # user.timezone has to be set for Jenkins to render local times.
+      JAVA_OPTS: "-Djenkins.install.runSetupWizard=true -Dhudson.model.DirectoryBrowserSupport.CSP= -Duser.timezone=Asia/Kolkata"
     volumes:
       - jenkins-home:/var/jenkins_home
       # The host's Docker daemon. This is what lets the Build stage produce an

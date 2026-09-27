@@ -1,11 +1,26 @@
+# Versions below were raised in response to findings from the pipeline's
+# Security stage (Trivy image scan, build #1). Each bump names the CVE it
+# closes so the reason survives in version control.
+
 Flask==3.0.3
 Flask-SQLAlchemy==3.1.1
 Flask-SocketIO==5.3.6
-Flask-Cors==4.0.1
-python-dotenv==1.0.1
-PyJWT==2.9.0
 Werkzeug==3.0.4
-python-socketio==5.11.4
+python-dotenv==1.0.1
+
+# CVE-2024-6221 (HIGH): Access-Control-Allow-Private-Network defaulted to true,
+# letting a public site reach private-network resources. Fixed in 4.0.2.
+Flask-Cors==4.0.2
+
+# CVE-2026-48526 (HIGH): authentication bypass via forged JSON Web Tokens, and
+# CVE-2026-32597 (HIGH): unknown `crit` header extensions accepted in violation
+# of RFC 7515. Both matter directly here, since every authenticated request and
+# every Socket.IO handshake is validated by this library.
+PyJWT==2.13.0
+
+# CVE-2026-48804 (HIGH): denial of service through binary attachment
+# accumulation on the Socket.IO server.
+python-socketio==5.16.2
 
 # Production serving. Socket.IO needs an async worker for WebSocket upgrades,
 # and exactly one worker process unless a Redis message queue is added.

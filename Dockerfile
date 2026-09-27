@@ -33,7 +33,15 @@ ENV APP_VERSION=${APP_VERSION} \
 WORKDIR /app
 
 COPY backend/requirements.txt ./
-RUN pip install --no-cache-dir -r requirements.txt
+
+# The build tooling is upgraded before the application's own dependencies
+# because two of the HIGH findings from the Security stage in build #1 live
+# there rather than in requirements.txt: CVE-2026-24049 in wheel (privilege
+# escalation via a malicious wheel file) and CVE-2026-23949 in jaraco.context
+# (path traversal via a malicious tar archive), which arrives as a dependency
+# of setuptools. Both ship inside the python:3.11-slim base image.
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel \
+ && pip install --no-cache-dir -r requirements.txt
 
 COPY backend/ ./
 
