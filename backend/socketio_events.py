@@ -9,9 +9,21 @@ from datetime import datetime, timezone
 # server logs a traceback on every unauthenticated attempt.
 from flask_socketio import ConnectionRefusedError, emit
 
+from prometheus_client import Counter
+
 from auth import decode_token
 from extensions import socketio
 from models import Message, MessageRecipient, User, db
+
+# A domain metric to sit alongside the automatic HTTP ones. Socket.IO traffic
+# never touches a Flask route, so message delivery is invisible to the default
+# instrumentation; without this the monitoring stage would show nothing about
+# the thing the application actually exists to do.
+MESSAGES_RELAYED = Counter(
+    "chat_messages_relayed_total",
+    "Encrypted message envelopes relayed to a recipient. Counts ciphertext "
+    "copies delivered; the server never holds plaintext.",
+)
 
 # sid -> {"user_id": int, "email": str}
 connected_sids = {}
@@ -165,6 +177,7 @@ def handle_send_message(data):
         target_ciphertext = ciphertexts.get(str(target_conn["user_id"]))
         if target_ciphertext is not None:
             emit("new_message", _message_payload(message, target_ciphertext), room=target_sid)
+            MESSAGES_RELAYED.inc()
 
 
 @socketio.on("get_message_history")

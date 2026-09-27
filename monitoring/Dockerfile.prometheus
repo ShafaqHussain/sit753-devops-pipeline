@@ -1,0 +1,11 @@
+# Prometheus with its configuration baked in.
+#
+# Jenkins reaches the Docker daemon through a mounted socket, so bind mounts in
+# a pipeline-started container would resolve against the host filesystem rather
+# than the Jenkins workspace. Copying the config into an image sidesteps that
+# entirely and makes the monitoring setup reproducible from the repo alone.
+
+FROM prom/prometheus:v2.53.0
+
+COPY prometheus.yml /etc/prometheus/prometheus.yml
+COPY alerts.yml     /etc/prometheus/alerts.yml

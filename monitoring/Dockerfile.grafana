@@ -1,0 +1,10 @@
+# Grafana with its datasource and dashboard provisioned at build time, for the
+# same reason as the Prometheus image: the pipeline cannot bind-mount workspace
+# files into containers it starts. Baking them in means the Monitoring stage
+# delivers a dashboard that is already populated, with no manual setup.
+
+FROM grafana/grafana:11.1.0
+
+COPY grafana/datasources.yml  /etc/grafana/provisioning/datasources/datasources.yml
+COPY grafana/dashboards.yml   /etc/grafana/provisioning/dashboards/dashboards.yml
+COPY grafana/encrypted-chat.json /etc/grafana/provisioning/dashboards/encrypted-chat.json

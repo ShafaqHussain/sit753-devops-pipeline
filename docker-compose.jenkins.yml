@@ -1,0 +1,40 @@
+# Jenkins controller, kept in its own compose file so it has an independent
+# lifecycle from the application. Start it once and leave it running:
+#
+#   docker compose -f docker-compose.jenkins.yml up -d --build
+#
+# Then open http://localhost:8080 and unlock with:
+#
+#   docker exec jenkins cat /var/jenkins_home/secrets/initialAdminPassword
+
+services:
+  jenkins:
+    build:
+      context: .
+      dockerfile: jenkins/Dockerfile
+    image: sit753-jenkins:local
+    container_name: jenkins
+    ports:
+      - "8080:8080"    # web UI
+      - "50000:50000"  # inbound agents, unused here but conventional
+    environment:
+      # Skips the "customise Jenkins" plugin wizard, since the image already
+      # bakes in every plugin the pipeline needs.
+      JAVA_OPTS: "-Djenkins.install.runSetupWizard=true -Dhudson.model.DirectoryBrowserSupport.CSP="
+    volumes:
+      - jenkins-home:/var/jenkins_home
+      # The host's Docker daemon. This is what lets the Build stage produce an
+      # image and the Deploy stage run containers. Images built by the pipeline
+      # land on the host, alongside the ones you build by hand, rather than
+      # inside a nested daemon.
+      - /var/run/docker.sock:/var/run/docker.sock
+    group_add:
+      # Grants the jenkins user access to the socket above. On Docker Desktop
+      # for Windows the socket is owned by root:root inside the VM, so 0 is
+      # correct there. On a native Linux host use the host's docker group id
+      # instead (stat -c '%g' /var/run/docker.sock).
+      - "0"
+    restart: unless-stopped
+
+volumes:
+  jenkins-home:

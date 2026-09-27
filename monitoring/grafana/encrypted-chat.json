@@ -1,0 +1,138 @@
+{
+  "uid": "encrypted-chat",
+  "title": "Encrypted Chat — Service Health",
+  "tags": ["sit753", "encrypted-chat"],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "10s",
+  "time": { "from": "now-30m", "to": "now" },
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Service Up",
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+      "targets": [
+        { "expr": "up{job=\"encrypted-chat\"}", "legendFormat": "up", "refId": "A" }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            { "type": "value", "options": { "0": { "text": "DOWN", "color": "red", "index": 0 } } },
+            { "type": "value", "options": { "1": { "text": "UP", "color": "green", "index": 1 } } }
+          ],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": null }, { "color": "green", "value": 1 }] }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Deployed Version",
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+      "targets": [
+        { "expr": "app_info{job=\"encrypted-chat\"}", "legendFormat": "{{version}}", "refId": "A" }
+      ],
+      "options": { "textMode": "name", "colorMode": "none" }
+    },
+    {
+      "type": "stat",
+      "title": "Requests / sec",
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+      "targets": [
+        { "expr": "sum(rate(flask_http_request_total{job=\"encrypted-chat\"}[1m]))", "refId": "A" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "reqps", "decimals": 2 }, "overrides": [] }
+    },
+    {
+      "type": "stat",
+      "title": "5xx Error Rate",
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+      "targets": [
+        {
+          "expr": "sum(rate(flask_http_request_total{job=\"encrypted-chat\",status=~\"5..\"}[5m])) / clamp_min(sum(rate(flask_http_request_total{job=\"encrypted-chat\"}[5m])), 0.0001)",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "decimals": 2,
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "red", "value": 0.05 }] }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Request Rate by Endpoint",
+      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 4 },
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+      "targets": [
+        {
+          "expr": "sum by (path) (rate(flask_http_request_total{job=\"encrypted-chat\"}[1m]))",
+          "legendFormat": "{{path}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "reqps" }, "overrides": [] }
+    },
+    {
+      "type": "timeseries",
+      "title": "Response Time (p50 / p95 / p99)",
+      "gridPos": { "h": 9, "w": 12, "x": 12, "y": 4 },
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.50, sum(rate(flask_http_request_duration_seconds_bucket{job=\"encrypted-chat\"}[5m])) by (le))",
+          "legendFormat": "p50",
+          "refId": "A"
+        },
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(flask_http_request_duration_seconds_bucket{job=\"encrypted-chat\"}[5m])) by (le))",
+          "legendFormat": "p95",
+          "refId": "B"
+        },
+        {
+          "expr": "histogram_quantile(0.99, sum(rate(flask_http_request_duration_seconds_bucket{job=\"encrypted-chat\"}[5m])) by (le))",
+          "legendFormat": "p99",
+          "refId": "C"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "s", "decimals": 3 }, "overrides": [] }
+    },
+    {
+      "type": "timeseries",
+      "title": "Responses by Status Code",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 13 },
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+      "targets": [
+        {
+          "expr": "sum by (status) (rate(flask_http_request_total{job=\"encrypted-chat\"}[1m]))",
+          "legendFormat": "{{status}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "reqps" }, "overrides": [] }
+    },
+    {
+      "type": "timeseries",
+      "title": "Encrypted Messages Relayed",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 13 },
+      "description": "Custom application metric. Counts ciphertext envelopes relayed to recipients; the server never sees plaintext.",
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+      "targets": [
+        {
+          "expr": "sum(rate(chat_messages_relayed_total{job=\"encrypted-chat\"}[1m]))",
+          "legendFormat": "messages/sec",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "short", "decimals": 3 }, "overrides": [] }
+    }
+  ]
+}
