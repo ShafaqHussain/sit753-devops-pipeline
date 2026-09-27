@@ -54,7 +54,7 @@
       "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
       "targets": [
         {
-          "expr": "sum(rate(flask_http_request_total{job=\"encrypted-chat\",status=~\"5..\"}[5m])) / clamp_min(sum(rate(flask_http_request_total{job=\"encrypted-chat\"}[5m])), 0.0001)",
+          "expr": "(sum(rate(flask_http_request_total{job=\"encrypted-chat\",status=~\"5..\"}[5m])) or vector(0)) / clamp_min(sum(rate(flask_http_request_total{job=\"encrypted-chat\"}[5m])), 0.0001)",
           "refId": "A"
         }
       ],
